@@ -109,7 +109,7 @@ def handle_receiving(sock, session_key):
 if __name__ == '__main__':
     # Setup socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.settimeout(10)
+    sock.settimeout(60)
 
     session_key = setup_communication(sock, bob_address)
 
