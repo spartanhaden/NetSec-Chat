@@ -67,17 +67,19 @@ if __name__ == '__main__':
                 user_keys[split_payload[1].decode()] = user_key
         elif len(split_payload) != 4:
             print('KDC: Wrong amount of info received')
-        elif split_payload[1] == b'Alice' and split_payload[2] == b'Bob':
+        elif split_payload[1] == b'Alice' and split_payload[2].decode() in user_keys:
+            # Bob refers the the other user Alice is trying to talk to
+            bob = split_payload[2].decode()
             print('KDC: Message from Alice received, sending response')
             alices_nonce = split_payload[0]
             bobs_encrypted_nonce = split_payload[3]
 
             # Create the ticket for Bob
-            ticket = user_keys['alice'] + user_keys['bob'] + b' Alice ' + bobs_encrypted_nonce
-            encrypted_ticket = encrypt(user_keys['bob'], ticket)
+            ticket = user_keys['alice'] + user_keys[bob] + b' Alice ' + bobs_encrypted_nonce
+            encrypted_ticket = encrypt(user_keys[bob], ticket)
 
             # Form the response to Alice
-            response = alices_nonce + b' Bob ' + user_keys['alice'] + user_keys['bob'] + b' ' + encrypted_ticket
+            response = alices_nonce + b' ' + bob.encode() + b' ' + user_keys['alice'] + user_keys[bob] + b' ' + encrypted_ticket
             message = encrypt(user_keys['alice'], response)
 
             # Send the response to Alice
