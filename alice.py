@@ -132,6 +132,20 @@ if __name__ == '__main__':
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.settimeout(60)
 
+    # TODO Ask who the user wants to talk to, and what port they are at
+    # TODO Use non blocking receive to kill program
+    # TODO Remove timeout
+    # TODO Have other user store port with KDC
+    # TODO Dynamically generate session keys
+    # TODO Make sure everything is commented
+
+    #bob = input('Who would you like to talk to?')
+    # Send name to KDC
+    # KDC looks up who is
+    # KDC returns ip
+    # send nonce to them with request to Talk
+    # maybe they have to say yes to send back Nonce
+
     session_key = setup_communication(sock, bob_address)
 
     # Create thread to listen for incoming messages
