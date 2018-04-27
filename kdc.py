@@ -8,8 +8,7 @@ from Crypto.PublicKey import RSA
 server_address = '127.0.0.1'
 server_port = 8888
 
-user_keys = {'alice':b'23FCE5AE61E7BFCB29AC85725E7EC77DB9DBA460EACA7458070B719CE0B1DC31',
-               'bob':b'A41503A5D9E66B34FAC9F2FC9FD14CA24D728B17DE0FCC2C3676DED6A191A1F1'}
+user_keys = {'alice':b'23FCE5AE61E7BFCB29AC85725E7EC77DB9DBA460EACA7458070B719CE0B1DC31'}
 
 
 def encrypt(key, data):
@@ -67,9 +66,9 @@ if __name__ == '__main__':
                 user_keys[split_payload[1].decode()] = user_key
         elif len(split_payload) != 4:
             print('KDC: Wrong amount of info received')
-        elif split_payload[1] == b'Alice' and split_payload[2].decode() in user_keys:
+        elif split_payload[1] == b'Alice' and split_payload[2].decode().lower() in user_keys:
             # Bob refers the the other user Alice is trying to talk to
-            bob = split_payload[2].decode()
+            bob = split_payload[2].decode().lower()
             print('KDC: Message from Alice received, sending response')
             alices_nonce = split_payload[0]
             bobs_encrypted_nonce = split_payload[3]
