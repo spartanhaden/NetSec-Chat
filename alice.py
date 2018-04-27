@@ -96,10 +96,26 @@ def setup_communication(sock, client_address):
     return session_key
 
 
+def handle_receiving(sock, session_key):
+    split_payload = sock.recvfrom(4096).split()
+    if len(split_payload) == 2:
+        print('Message from ' + split_payload[0].decode())
+        message = decrypt(session_key, split_payload[1])
+        print(split_payload[0].decode() + ': ' + message)
+
+
 if __name__ == '__main__':
     # Setup socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.settimeout(10)
 
     session_key = setup_communication(sock, client_address)
+    session_key = setup_communication(sock, bob_address)
+
+    # Create thread to listen for incoming messages
+    threading.Thread(target=handle_receiving, args=(sock, session_key)).start()
+
+    while True:
+        message = input('Send message').encode()
+        sock.sendto(name.encode() + b' ' + encrypt(session_key, message), client_address)
 
