@@ -98,11 +98,12 @@ def setup_communication(sock, bob_address):
 
 
 def handle_receiving(sock, session_key):
-    split_payload = sock.recvfrom(4096).split()
-    if len(split_payload) == 2:
-        print('Message from ' + split_payload[0].decode())
-        message = decrypt(session_key, split_payload[1])
-        print(split_payload[0].decode() + ': ' + message)
+    while True:
+        split_payload = sock.recvfrom(4096)[0].split()
+        if len(split_payload) == 2:
+            print('Message from ' + split_payload[0].decode())
+            message = decrypt(session_key, split_payload[1])
+            print(split_payload[0].decode() + ': ' + message.decode())
 
 
 if __name__ == '__main__':
