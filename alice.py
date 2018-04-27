@@ -3,8 +3,10 @@
 import socket
 import binascii
 import threading
+import time
 from Crypto.Cipher import AES
 from Crypto.Random.random import getrandbits
+from tkinter import *
 
 port = 8671
 kdc_port = 8888
@@ -12,6 +14,9 @@ ip = '127.0.0.1'
 bob_address = (ip, port)
 
 alices_key = b'23FCE5AE61E7BFCB29AC85725E7EC77DB9DBA460EACA7458070B719CE0B1DC31'
+
+user_queue = []
+alice_queue = ['Hello alice, welcome to chat']
 
 
 def encrypt(key, data):
@@ -104,6 +109,22 @@ def handle_receiving(sock, session_key):
             print('Message from ' + split_payload[0].decode())
             message = decrypt(session_key, split_payload[1])
             print(split_payload[0].decode() + ': ' + message.decode())
+            user_queue.append(split_payload[0].decode() + ': ' + message.decode())
+
+
+def handle_output():
+    root = Tk()
+    text = Text(root)
+    text.pack()
+
+    while True:
+        #time.sleep(1)
+        while len(alice_queue) > 0:
+            text.insert(END, alice_queue.pop() + '\n')
+        while len(user_queue) > 0:
+            text.insert(END, user_queue.pop() + '\n')
+        root.update_idletasks()
+        root.update()
 
 
 if __name__ == '__main__':
@@ -114,10 +135,14 @@ if __name__ == '__main__':
     session_key = setup_communication(sock, bob_address)
 
     # Create thread to listen for incoming messages
-    receiver = threading.Thread(target=handle_receiving, args=(sock, session_key)).start()
+    threading.Thread(target=handle_receiving, args=(sock, session_key)).start()
+
+    # Handle the message output
+    threading.Thread(target=handle_output).start()
 
     while True:
         message = input().encode()
         if message == b'exit':
             exit()
         sock.sendto(b'alice ' + encrypt(session_key, message), bob_address)
+        alice_queue.append('alice: ' + message.decode())
