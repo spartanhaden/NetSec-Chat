@@ -10,9 +10,7 @@ from Crypto.Random.random import getrandbits
 server_address = '127.0.0.1'
 server_port = 8671
 kdc_port = 8888
-
-bobs_key = b'A41503A5D9E66B34FAC9F2FC9FD14CA24D728B17DE0FCC2C3676DED6A191A1F1'
-
+bobs_key = None
 
 def encrypt(key, data):
     # Setup the cipher to encrypt the data
@@ -109,6 +107,12 @@ def handle_receiving(sock, session_key):
 
 
 if __name__ == '__main__':
+    # Generate random key and pad front with zeros
+    new_key = str(hex(getrandbits(256))).upper()[2:].encode()
+    bobs_key = new_key
+    for i in range(64 - len(new_key)):
+        bobs_key = b'0' + bobs_key
+
     # Setup socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.settimeout(10)
