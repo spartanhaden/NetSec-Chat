@@ -2,13 +2,14 @@
 
 import socket
 import binascii
-from Crypto.Cipher import AES
+from Crypto.Cipher import AES, PKCS1_OAEP
+from Crypto.PublicKey import RSA
 
 server_address = '127.0.0.1'
 server_port = 8888
 
-alices_key = b'23FCE5AE61E7BFCB29AC85725E7EC77DB9DBA460EACA7458070B719CE0B1DC31'
-bobs_key = b'A41503A5D9E66B34FAC9F2FC9FD14CA24D728B17DE0FCC2C3676DED6A191A1F1'
+user_keys = {'alice':b'23FCE5AE61E7BFCB29AC85725E7EC77DB9DBA460EACA7458070B719CE0B1DC31',
+               'bob':b'A41503A5D9E66B34FAC9F2FC9FD14CA24D728B17DE0FCC2C3676DED6A191A1F1'}
 
 
 def encrypt(key, data):
@@ -27,6 +28,11 @@ def encrypt(key, data):
 
 
 if __name__ == '__main__':
+    # Create public and private keys
+    key = RSA.generate(2048)
+    private_key_plaintext = key.export_key()
+    public_key_plaintext = key.publickey().export_key()
+
     # Setup socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.settimeout(10)
@@ -44,7 +50,22 @@ if __name__ == '__main__':
 
         # Verify the message
 
-        if len(split_payload) != 4:
+        if len(split_payload) == 1:
+            if split_payload[0] == b'request_public_key':
+                print('KDC: Sending public key to user')
+                sock.sendto(public_key_plaintext, client_address)
+        elif len(split_payload) == 3:
+            if split_payload[0] == b'add_user':
+                print('KDC: Adding ' + split_payload[1].decode() + '\'s key to the database')
+
+                # Decrypt the key
+                private_key = RSA.import_key(private_key_plaintext)
+                cipher_rsa = PKCS1_OAEP.new(private_key)
+                user_key = cipher_rsa.decrypt(binascii.unhexlify(split_payload[2]))
+
+                # Add the new user's key
+                user_keys[split_payload[1].decode()] = user_key
+        elif len(split_payload) != 4:
             print('KDC: Wrong amount of info received')
         elif split_payload[1] == b'Alice' and split_payload[2] == b'Bob':
             print('KDC: Message from Alice received, sending response')
@@ -52,12 +73,12 @@ if __name__ == '__main__':
             bobs_encrypted_nonce = split_payload[3]
 
             # Create the ticket for Bob
-            ticket = alices_key + bobs_key + b' Alice ' + bobs_encrypted_nonce
-            encrypted_ticket = encrypt(bobs_key, ticket)
+            ticket = user_keys['alice'] + user_keys['bob'] + b' Alice ' + bobs_encrypted_nonce
+            encrypted_ticket = encrypt(user_keys['bob'], ticket)
 
             # Form the response to Alice
-            response = alices_nonce + b' Bob ' + alices_key + bobs_key + b' ' + encrypted_ticket
-            message = encrypt(alices_key, response)
+            response = alices_nonce + b' Bob ' + user_keys['alice'] + user_keys['bob'] + b' ' + encrypted_ticket
+            message = encrypt(user_keys['alice'], response)
 
             # Send the response to Alice
             sock.sendto(message, client_address)
