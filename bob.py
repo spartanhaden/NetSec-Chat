@@ -2,11 +2,13 @@
 
 import socket
 import binascii
-from Crypto.Cipher import AES
+from Crypto.Cipher import AES, PKCS1_OAEP
+from Crypto.PublicKey import RSA
 from Crypto.Random.random import getrandbits
 
 server_address = '127.0.0.1'
 server_port = 8671
+kdc_port = 8888
 
 bobs_key = b'A41503A5D9E66B34FAC9F2FC9FD14CA24D728B17DE0FCC2C3676DED6A191A1F1'
 
@@ -35,6 +37,20 @@ def decrypt(key, data):
 
     # Decrypt the message
     return cipher.decrypt_and_verify(binascii.unhexlify(ascii_ciphertext), binascii.unhexlify(ascii_digest))
+
+
+def register_with_kdc(sock, name):
+    # Ask the KDC for it's public key
+    sock.sendto(b'request_public_key', (server_address, kdc_port))
+    payload = sock.recvfrom(4096)[0]
+
+    # Use the KDC's public key to encrypt the user's key
+    public_key = RSA.import_key(payload)
+    cipher_rsa = PKCS1_OAEP.new(public_key)
+    enc_user_key = cipher_rsa.encrypt(bobs_key)
+
+    # Register with the KDC
+    sock.sendto(b'add_user ' + name.encode() + b' ' + binascii.hexlify(enc_user_key), (server_address, kdc_port))
 
 
 if __name__ == '__main__':
