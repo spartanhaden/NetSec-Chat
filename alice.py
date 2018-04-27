@@ -39,11 +39,7 @@ def decrypt(key, data):
     return cipher.decrypt_and_verify(binascii.unhexlify(ascii_ciphertext), binascii.unhexlify(ascii_digest))
 
 
-if __name__ == '__main__':
-    # Setup socket
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.settimeout(10)
-
+def setup_communication(sock, client_address):
     # Send initial message to Bob
     print('Alice: Sending "Let\'s Talk" to Bob')
     sock.sendto('Let\'s talk'.encode(), bob_server)
@@ -96,13 +92,14 @@ if __name__ == '__main__':
     sock.sendto(message, bob_server)
     print('Alice: Sending Bobs updated nonce of ' + str(bobs_nonce_2 - 1))
 
-    # Wait for user input to send the 'GET' Request
-    input('Alice: Please type something to request the file from Bob\n')
-    encrypted_message = encrypt(session_key, b'GET')
-    sock.sendto(encrypted_message, bob_server)
+    # Authentication completed
+    return session_key
 
-    # Receive the file back, decrypt it, and print it
-    encrypted_payload = sock.recv(262144)
-    payload = decrypt(session_key, encrypted_payload)
-    print('Alice: Encrypted file from Bob received, the contents are\n')
-    print(payload.decode())
+
+if __name__ == '__main__':
+    # Setup socket
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.settimeout(10)
+
+    session_key = setup_communication(sock, client_address)
+
