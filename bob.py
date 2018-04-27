@@ -99,6 +99,15 @@ def setup_communication(sock, client_address):
     # Authentication completed
     return session_key
 
+
+def handle_receiving(sock, session_key):
+    split_payload = sock.recvfrom(4096).split()
+    if len(split_payload) == 2:
+        print('Message from ' + split_payload[0].decode())
+        message = decrypt(session_key, split_payload[1])
+        print(split_payload[0].decode() + ': ' + message)
+
+
 if __name__ == '__main__':
     # Setup socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -121,4 +130,8 @@ if __name__ == '__main__':
     else:
         print('Bob: Improper message received, please restart')
         exit()
+
+    # Create thread to listen for incoming messages
+    threading.Thread(target=handle_receiving, args=(sock, session_key)).start()
+
     while True:
