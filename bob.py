@@ -99,11 +99,12 @@ def setup_communication(sock, client_address):
 
 
 def handle_receiving(sock, session_key):
-    split_payload = sock.recvfrom(4096).split()
-    if len(split_payload) == 2:
-        print('Message from ' + split_payload[0].decode())
-        message = decrypt(session_key, split_payload[1])
-        print(split_payload[0].decode() + ': ' + message)
+    while True:
+        split_payload = sock.recvfrom(4096)[0].split()
+        if len(split_payload) == 2:
+            print('Message from ' + split_payload[0].decode())
+            message = decrypt(session_key, split_payload[1])
+            print(split_payload[0].decode() + ': ' + message.decode())
 
 
 if __name__ == '__main__':
@@ -139,3 +140,7 @@ if __name__ == '__main__':
     threading.Thread(target=handle_receiving, args=(sock, session_key)).start()
 
     while True:
+        message = input().encode()
+        if message == b'exit':
+            exit()
+        sock.sendto(name.encode() + b' ' + encrypt(session_key, message), client_address)
