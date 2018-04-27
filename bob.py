@@ -106,6 +106,10 @@ if __name__ == '__main__':
     sock.bind((server_address, server_port))
     print('Bob: Listening on ' + server_address + ':' + str(server_port))
 
+    #name = input('What is your name?')
+    name = 'bob'
+    register_with_kdc(sock, name)
+
     # Waits for message from Alice
     print()
     print('Bob: waiting for request...')
