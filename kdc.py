@@ -29,6 +29,7 @@ def encrypt(key, data):
 if __name__ == '__main__':
     # Setup socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.settimeout(10)
     sock.bind((server_address, server_port))
     print('KDC: Listening on ' + server_address + ':' + str(server_port))
 

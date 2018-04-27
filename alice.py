@@ -42,6 +42,7 @@ def decrypt(key, data):
 if __name__ == '__main__':
     # Setup socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.settimeout(10)
 
     # Send initial message to Bob
     print('Alice: Sending "Let\'s Talk" to Bob')
