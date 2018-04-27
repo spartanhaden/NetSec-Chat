@@ -62,8 +62,9 @@ if __name__ == '__main__':
                 cipher_rsa = PKCS1_OAEP.new(private_key)
                 user_key = cipher_rsa.decrypt(binascii.unhexlify(split_payload[2]))
 
-                # Add the new user's key
+                # Add the new user's key and print out the new directory
                 user_keys[split_payload[1].decode()] = user_key
+                print(user_keys)
         elif len(split_payload) != 4:
             print('KDC: Wrong amount of info received')
         elif split_payload[1] == b'Alice' and split_payload[2].decode().lower() in user_keys:
